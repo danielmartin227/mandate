@@ -1,0 +1,22 @@
+# Local-only workflow files (house rules)
+CLAUDE.md
+.claude/
+context/session-status-*.md
+AGENTS.md
+
+# Secrets - never commit
+.env
+.env.*
+*.pem
+*.key
+
+# Dependencies / build
+node_modules/
+dist/
+out/
+cache/
+broadcast/
+
+# OS noise
+.DS_Store
+Thumbs.db
