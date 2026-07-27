@@ -1,4 +1,4 @@
-# Standing Orders
+# Mandate
 
 **Treasury rules in plain English, executed as deterministic onchain flows on Arc.**
 

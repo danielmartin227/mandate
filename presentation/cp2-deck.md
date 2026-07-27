@@ -1,10 +1,10 @@
-# Standing Orders - CP2 Mid-Submission Deck
+# Mandate - CP2 Mid-Submission Deck
 
 Encode x Arc Programmable Money Hackathon - DeFi track - Checkpoint 2 (2026-07-27)
 
 ---
 
-## Slide 1 - Standing Orders
+## Slide 1 - Mandate
 
 **Treasury rules in plain English, executed as deterministic onchain flows on Arc.**
 
@@ -18,7 +18,7 @@ AI compiles the sentence. The chain runs the rule. **AI touches money zero times
 
 - Onchain treasuries are managed by hand: someone watches balances, splits revenue, tops up chains.
 - Automation today means either writing custom contracts (slow, risky) or trusting an AI agent with execution (unauditable: the same prompt can produce different transfers tomorrow).
-- Finance teams already think in standing orders: fixed instructions, executed exactly. Crypto treasuries deserve the same guarantee.
+- Finance teams already work with mandates: fixed instructions, executed exactly. Crypto treasuries deserve the same guarantee.
 
 ---
 
@@ -34,7 +34,7 @@ The rule survives even if our backend dies: anyone can call `execute()`.
 
 ## Slide 4 - Differentiation
 
-| | arc-fintech (Circle sample) | ArcFlux (prior hackathon) | Standing Orders |
+| | arc-fintech (Circle sample) | ArcFlux (prior hackathon) | Mandate |
 |---|---|---|---|
 | Standing rules | none - manual buttons | scheduled push payments | reactive treasury policy on incoming funds |
 | AI's role | none | GPT-4 parses every command; Guardian Agent scores every transaction | compiled out after setup - zero AI at execution |
