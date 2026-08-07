@@ -1,0 +1,35 @@
+{
+  "name": "mandate",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Treasury rules in plain English, compiled once by AI into deterministic onchain templates on Arc.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "compile": "tsx scripts/compile-contracts.ts",
+    "deploy:split": "tsx scripts/deploy-rule.ts SplitRule",
+    "deploy:sweep": "tsx scripts/deploy-rule.ts SweepRule",
+    "deploy:bridge": "tsx scripts/deploy-bridge-rule.ts",
+    "verify": "tsx scripts/verify-on-blockscout.ts",
+    "watch": "tsx src/watcher/run-watcher.ts",
+    "execute": "tsx scripts/execute-rule-manually.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0",
+    "dotenv": "^17.2.3",
+    "next": "^15.3.3",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "solc": "^0.8.36",
+    "viem": "^2.55.11"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.2",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}

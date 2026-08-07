@@ -3,6 +3,8 @@ CLAUDE.md
 .claude/
 context/session-status-*.md
 AGENTS.md
+# Private working-context handoff: names other accounts and local paths
+HKT-02-mandate-context.md
 
 # Secrets - never commit
 .env
@@ -16,7 +18,12 @@ dist/
 out/
 cache/
 broadcast/
+.next/
+next-env.d.ts
+*.tsbuildinfo
 
 # OS noise
 .DS_Store
 Thumbs.db
+artifacts/
+data/
