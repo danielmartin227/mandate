@@ -1,0 +1,19 @@
+{
+  "name": "mandate-spike",
+  "private": true,
+  "type": "module",
+  "description": "Throwaway spike workspace. Settles open technical unknowns before the real build.",
+  "scripts": {
+    "s1": "tsx s1-connectivity-and-balances.ts",
+    "s2": "tsx s2-deploy-and-verify.ts",
+    "s3": "tsx s3-native-send-into-contract.ts",
+    "s4": "tsx s4-watch-system-emitter.ts",
+    "s5": "tsx s5-cctp-round-trip.ts"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "solc": "^0.8.36",
+    "tsx": "^4.23.9",
+    "viem": "^2.55.11"
+  }
+}

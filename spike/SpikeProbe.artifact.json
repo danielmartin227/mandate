@@ -1,0 +1,106 @@
+{
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "Received",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount6",
+          "type": "uint256"
+        }
+      ],
+      "name": "SweptOut",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "USDC",
+      "outputs": [
+        {
+          "internalType": "contract IUSDC",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "erc20Balance",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "nativeBalance",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount6",
+          "type": "uint256"
+        }
+      ],
+      "name": "sweepTo",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "stateMutability": "payable",
+      "type": "receive"
+    }
+  ],
+  "bytecode": "0x6080604052348015600f57600080fd5b5061032a8061001f6000396000f3fe6080604052600436106100435760003560e01c80634c109fd814610084578063812b02ee146100a6578063865fc501146100ce57806389a30271146100e157600080fd5b3661007f5760405134815233907f88a5966d370b9919b20f3e2c13ff65706f196a4e32cc2c12bf57088f885258749060200160405180910390a2005b600080fd5b34801561009057600080fd5b506100a461009f36600461027a565b610111565b005b3480156100b257600080fd5b506100bb61020f565b6040519081526020015b60405180910390f35b3480156100da57600080fd5b50476100bb565b3480156100ed57600080fd5b506100f9601b60991b81565b6040516001600160a01b0390911681526020016100c5565b60405163a9059cbb60e01b81526001600160a01b038316600482015260248101829052601b60991b9063a9059cbb906044016020604051808303816000875af1158015610162573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061018691906102b2565b6101c85760405162461bcd60e51b815260206004820152600f60248201526e1d1c985b9cd9995c8819985a5b1959608a1b604482015260640160405180910390fd5b816001600160a01b03167f0bd01247a16d2e5ff66dadf8ecb52f52d7b339c02ebef80583c8760c2c42ab718260405161020391815260200190565b60405180910390a25050565b6040516370a0823160e01b8152306004820152600090601b60991b906370a0823190602401602060405180830381865afa158015610251573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061027591906102db565b905090565b6000806040838503121561028d57600080fd5b82356001600160a01b03811681146102a457600080fd5b946020939093013593505050565b6000602082840312156102c457600080fd5b815180151581146102d457600080fd5b9392505050565b6000602082840312156102ed57600080fd5b505191905056fea2646970667358221220f195756396143010547567957ff0de93b9f4ff4c2d1bf58810b34c43ca1e4eb964736f6c63430008240033",
+  "standardJsonInput": "{\"language\":\"Solidity\",\"sources\":{\"SpikeProbe.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.8.24;\\n\\ninterface IUSDC {\\n    function balanceOf(address account) external view returns (uint256);\\n    function transfer(address to, uint256 amount) external returns (bool);\\n}\\n\\n/// @notice Throwaway probe for spike tests S2 and S3.\\n/// Answers three questions the real templates depend on:\\n///  1. Does a contract need receive() to accept native-interface USDC on Arc? (expect yes)\\n///  2. Does the 6-decimal ERC-20 precompile see funds that arrived through the 18-decimal\\n///     native interface? (Arc claims one balance behind two interfaces)\\n///  3. Can a contract move USDC out through the precompile?\\ncontract SpikeProbe {\\n    /// USDC ERC-20 precompile, 6 decimals, same balance as the native interface.\\n    IUSDC public constant USDC = IUSDC(0x3600000000000000000000000000000000000000);\\n\\n    event Received(address indexed from, uint256 value);\\n    event SweptOut(address indexed to, uint256 amount6);\\n\\n    /// Native-interface USDC arrives as msg.value. Without this the transfer reverts.\\n    receive() external payable {\\n        emit Received(msg.sender, msg.value);\\n    }\\n\\n    /// Balance as reported by the 6-decimal precompile.\\n    function erc20Balance() external view returns (uint256) {\\n        return USDC.balanceOf(address(this));\\n    }\\n\\n    /// Balance as reported by the 18-decimal native interface.\\n    function nativeBalance() external view returns (uint256) {\\n        return address(this).balance;\\n    }\\n\\n    /// Move USDC out through the precompile. Amount is in 6 decimals.\\n    function sweepTo(address to, uint256 amount6) external {\\n        require(USDC.transfer(to, amount6), \\\"transfer failed\\\");\\n        emit SweptOut(to, amount6);\\n    }\\n}\\n\"}},\"settings\":{\"optimizer\":{\"enabled\":true,\"runs\":200},\"evmVersion\":\"paris\",\"outputSelection\":{\"*\":{\"*\":[\"abi\",\"evm.bytecode.object\"]}}}}",
+  "solcVersion": "0.8.36+commit.8a079791.Emscripten.clang"
+}
