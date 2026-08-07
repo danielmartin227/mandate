@@ -1,340 +1,440 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import Link from "next/link";
+import { C } from "./ui-theme";
+import { GlobalStyle, Dot, Badge, SectionLabel, NavPill } from "./shared-ui";
 
-type CompileResult =
-  | { kind: "refusal"; reason: string; sentence: string; model: string }
-  | {
-      kind: "compiled";
-      template: string;
-      readback: string;
-      sentence: string;
-      model: string;
-      deployArgs: string[];
-      params: Record<string, string | number>;
-    };
+const STEPS = [
+  {
+    n: "1",
+    title: "Describe",
+    body: "Write your treasury rule in plain English. The AI interprets your intent once.",
+  },
+  {
+    n: "2",
+    title: "Confirm",
+    body: "Review the AI's readback. Confirm the parameters are correct. This is the AI's last contact.",
+  },
+  {
+    n: "3",
+    title: "Deploy",
+    body: "The rule is compiled into a fixed, verified onchain template. Execution is deterministic forever.",
+  },
+];
 
-type DeployedRule = {
-  template: string;
-  address: string;
-  deployTx: string;
-  params: Record<string, string | number>;
-  deployedAt: string;
-  sourceSentence?: string;
-};
+const TEMPLATES = [
+  {
+    name: "SplitRule",
+    body: "Routes a fixed share of every incoming USDC payment to a savings address. The rest stays.",
+  },
+  {
+    name: "SweepRule",
+    body: "Moves any surplus above a retained floor to a destination address on the same chain.",
+  },
+  {
+    name: "BridgeRule",
+    body: "Bridges surplus above a floor to a recipient on Base via CCTP on a schedule.",
+  },
+];
 
-type Execution = {
-  ruleAddress: string;
-  template: string;
-  outcome: string;
-  timestamp: string;
-  txHash?: string;
-};
+// Answers describe what the system actually does. Nothing here claims an audit,
+// and nothing claims the AI is involved after compile, because it is not.
+const FAQ = [
+  {
+    q: "What happens if the AI makes a mistake?",
+    a: "It is built to refuse rather than guess. A sentence missing an address, a share, or a schedule is declined with the reason stated. When it does compile, every field is re-validated in code before anything can reach a deploy call, and you read a plain-English readback and confirm it yourself. Nothing reaches the chain without that click.",
+  },
+  {
+    q: "Can anyone call execute() on my rule?",
+    a: "Yes, and that is the point. execute() is permissionless, so the rule stays enforceable even if our keeper disappears. A caller cannot change where funds go or how much moves: those parameters are immutable in the deployed contract. All they can do is trigger the behaviour you already approved.",
+  },
+  {
+    q: "What tokens does Mandate support?",
+    a: "USDC only. Arc is USDC-native, so it is both the treasury asset and the gas token. All contract arithmetic goes through the 6-decimal USDC interface.",
+  },
+  {
+    q: "Is the AI involved after deployment?",
+    a: "No. There is exactly one model call per rule, at setup, before the contract exists. After that the deployed template is plain Solidity and the keeper is a log filter and a timer. You can verify this by grepping the repository: one file imports the model SDK, and nothing in the execution path touches it.",
+  },
+  {
+    q: "What chain does this run on?",
+    a: "Arc Testnet, chain 5042002, with every template source-verified on Arcscan. BridgeRule moves funds to Base Sepolia over CCTP V2, with the contract calling the burn itself rather than routing through a backend.",
+  },
+];
 
-export default function MandatePage() {
-  const [sentence, setSentence] = useState("");
-  const [compiling, setCompiling] = useState(false);
-  const [deploying, setDeploying] = useState(false);
-  const [result, setResult] = useState<CompileResult | null>(null);
-  const [deployedAddress, setDeployedAddress] = useState<string | null>(null);
-  const [rules, setRules] = useState<DeployedRule[]>([]);
-  const [executions, setExecutions] = useState<Execution[]>([]);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadRules = useCallback(async () => {
-    try {
-      const res = await fetch("/api/rules");
-      if (res.ok) setRules(await res.json());
-    } catch { /* ignore */ }
-  }, []);
-
-  const loadExecutions = useCallback(async () => {
-    try {
-      const res = await fetch("/api/executions");
-      if (res.ok) setExecutions(await res.json());
-    } catch { /* ignore */ }
-  }, []);
-
-  useEffect(() => {
-    loadRules();
-    loadExecutions();
-    const interval = setInterval(() => { loadRules(); loadExecutions(); }, 10_000);
-    return () => clearInterval(interval);
-  }, [loadRules, loadExecutions]);
-
-  async function handleCompile() {
-    if (!sentence.trim()) return;
-    setCompiling(true);
-    setResult(null);
-    setDeployedAddress(null);
-    setError(null);
-    try {
-      const res = await fetch("/api/compile", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sentence: sentence.trim() }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      setResult(await res.json());
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setCompiling(false);
-    }
-  }
-
-  async function handleDeploy() {
-    if (!result || result.kind !== "compiled") return;
-    setDeploying(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/deploy", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          template: result.template,
-          deployArgs: result.deployArgs,
-          sentence: result.sentence,
-        }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      const data = await res.json();
-      setDeployedAddress(data.address);
-      loadRules();
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setDeploying(false);
-    }
-  }
+export default function MarketingPage() {
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
-    <div style={{ maxWidth: 800, margin: "0 auto", padding: "40px 20px" }}>
-      <header style={{ marginBottom: 48 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0, letterSpacing: "-0.02em" }}>
-          Mandate
-        </h1>
-        <p style={{ color: "#888", marginTop: 8, fontSize: 14 }}>
-          Treasury rules in plain English. AI compiles once, then leaves.
-        </p>
-      </header>
+    <>
+      <GlobalStyle />
+      <NavPill ctaLabel="Launch App" ctaHref="/app" />
 
-      {/* Sentence input */}
-      <section style={{ marginBottom: 32 }}>
-        <label style={{ display: "block", fontSize: 13, color: "#888", marginBottom: 8 }}>
-          Describe your treasury rule
-        </label>
-        <div style={{ display: "flex", gap: 8 }}>
-          <input
-            type="text"
-            value={sentence}
-            onChange={(e) => setSentence(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleCompile()}
-            placeholder='e.g. "route 10% of every deposit to 0x99189B..."'
-            disabled={compiling || deploying}
+      <main className="wrap">
+        {/* Hero */}
+        <section style={{ position: "relative", paddingTop: 180, paddingBottom: 120 }}>
+          <h1
+            className="hero-title"
             style={{
-              flex: 1, padding: "10px 14px", fontSize: 15,
-              background: "#141414", border: "1px solid #333", borderRadius: 8,
-              color: "#e5e5e5", outline: "none",
-            }}
-          />
-          <button
-            onClick={handleCompile}
-            disabled={compiling || deploying || !sentence.trim()}
-            style={{
-              padding: "10px 20px", fontSize: 14, fontWeight: 600,
-              background: compiling ? "#333" : "#2563eb", color: "#fff",
-              border: "none", borderRadius: 8, cursor: compiling ? "wait" : "pointer",
+              fontSize: 92,
+              fontWeight: 700,
+              letterSpacing: "-0.03em",
+              lineHeight: 1.03,
+              margin: 0,
+              maxWidth: 940,
+              color: C.headingDark,
             }}
           >
-            {compiling ? "Compiling..." : "Compile"}
-          </button>
+            Treasury Rules in Plain English
+          </h1>
+          <p
+            style={{
+              fontSize: 16,
+              lineHeight: 1.6,
+              color: C.bodyLight,
+              maxWidth: 500,
+              marginTop: 32,
+              marginBottom: 0,
+            }}
+          >
+            AI compiles your intent once into a fixed onchain template, then leaves
+            permanently. No model in the loop. No custody. No trust.
+          </p>
+
+          <Badge className="float-badge" style={{ position: "absolute", top: 130, right: 0 }}>
+            Zero AI after compile
+          </Badge>
+          <Badge className="float-badge" style={{ position: "absolute", left: 0, bottom: 44 }}>
+            3 fixed templates
+          </Badge>
+          <Badge className="float-badge" style={{ position: "absolute", right: 40, bottom: 60 }}>
+            Deterministic execution
+          </Badge>
+        </section>
+
+        {/* How it works */}
+        <section style={{ paddingBottom: 120 }}>
+          <SectionLabel>How it works</SectionLabel>
+          <div style={{ display: "flex", flexDirection: "column", gap: 56 }}>
+            {STEPS.map((step) => (
+              <div key={step.n} style={{ display: "flex", gap: 32, alignItems: "flex-start" }}>
+                <span
+                  style={{
+                    fontSize: 48,
+                    fontWeight: 700,
+                    color: C.mint,
+                    lineHeight: 1,
+                    minWidth: 60,
+                  }}
+                >
+                  {step.n}
+                </span>
+                <div>
+                  <h3
+                    style={{
+                      fontSize: 24,
+                      fontWeight: 700,
+                      color: C.headingDark,
+                      margin: "0 0 10px",
+                    }}
+                  >
+                    {step.title}
+                  </h3>
+                  <p
+                    style={{
+                      fontSize: 16,
+                      lineHeight: 1.6,
+                      color: C.bodyLight,
+                      margin: 0,
+                      maxWidth: 620,
+                    }}
+                  >
+                    {step.body}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Templates */}
+        <section style={{ paddingBottom: 120 }}>
+          <SectionLabel>Templates</SectionLabel>
+          {TEMPLATES.map((t) => (
+            <Link
+              key={t.name}
+              href="/app"
+              className="row-link"
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 24,
+                borderBottom: `1px solid ${C.border}`,
+                padding: "24px 0",
+                textDecoration: "none",
+              }}
+            >
+              <div>
+                <h3
+                  style={{
+                    fontSize: 28,
+                    fontWeight: 700,
+                    color: C.headingDark,
+                    margin: "0 0 8px",
+                  }}
+                >
+                  {t.name}
+                  <Dot color={C.lavender} size={10} />
+                </h3>
+                <p
+                  style={{
+                    fontSize: 16,
+                    lineHeight: 1.6,
+                    color: C.bodyLight,
+                    margin: 0,
+                    maxWidth: 720,
+                  }}
+                >
+                  {t.body}
+                </p>
+              </div>
+              <span style={{ fontSize: 18, color: C.headingDark }}>{"-->"}</span>
+            </Link>
+          ))}
+        </section>
+      </main>
+
+      {/* Stats marquee, full bleed */}
+      <section style={{ overflow: "hidden", position: "relative", padding: "40px 0 60px" }}>
+        <div className="marquee-track" aria-hidden="true">
+          {[0, 1].map((copy) => (
+            <div key={copy} style={{ display: "flex", alignItems: "center" }}>
+              {[0, 1].map((i) => (
+                <span key={i} style={{ display: "flex", alignItems: "center" }}>
+                  <span
+                    className="marquee-text"
+                    style={{
+                      fontSize: 150,
+                      fontWeight: 800,
+                      letterSpacing: "-0.03em",
+                      color: C.headingDark,
+                      whiteSpace: "nowrap",
+                      lineHeight: 1.1,
+                    }}
+                  >
+                    Zero AI after compile
+                  </span>
+                  <span
+                    style={{
+                      display: "inline-block",
+                      width: 24,
+                      height: 24,
+                      borderRadius: "50%",
+                      background: C.headingDark,
+                      margin: "0 48px",
+                      flexShrink: 0,
+                    }}
+                  />
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+        {/* Readable equivalent of the decorative marquee above. */}
+        <span style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>
+          Zero AI after compile
+        </span>
+        <div
+          className="wrap"
+          style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 24 }}
+        >
+          <Badge>Permissionless execute()</Badge>
+          <Badge>Verified on Arcscan</Badge>
         </div>
       </section>
 
-      {/* Error */}
-      {error && (
-        <div style={{
-          padding: "12px 16px", marginBottom: 24, background: "#1a0000",
-          border: "1px solid #4a0000", borderRadius: 8, fontSize: 14, color: "#f87171",
-        }}>
-          {error}
-        </div>
-      )}
-
-      {/* Compile result: refusal */}
-      {result?.kind === "refusal" && (
-        <div style={{
-          padding: "16px 20px", marginBottom: 24, background: "#1a1400",
-          border: "1px solid #4a3800", borderRadius: 8,
-        }}>
-          <div style={{ fontSize: 13, color: "#facc15", marginBottom: 6, fontWeight: 600 }}>
-            Refused
-          </div>
-          <div style={{ fontSize: 15 }}>{result.reason}</div>
-        </div>
-      )}
-
-      {/* Compile result: preview card */}
-      {result?.kind === "compiled" && !deployedAddress && (
-        <div style={{
-          padding: "20px 24px", marginBottom: 24, background: "#0a1628",
-          border: "1px solid #1e3a5f", borderRadius: 8,
-        }}>
-          <div style={{ fontSize: 13, color: "#60a5fa", marginBottom: 4, fontWeight: 600 }}>
-            Preview: {result.template}
-          </div>
-          <div style={{ fontSize: 15, lineHeight: 1.5, marginBottom: 16 }}>
-            {result.readback}
-          </div>
-          <div style={{ fontSize: 12, color: "#666", marginBottom: 16 }}>
-            {Object.entries(result.params).map(([k, v]) => (
-              <span key={k} style={{ marginRight: 16 }}>
-                <span style={{ color: "#888" }}>{k}:</span>{" "}
-                <span style={{ color: "#a3a3a3", fontFamily: "monospace" }}>
-                  {String(v).length > 20 ? String(v).slice(0, 10) + "..." + String(v).slice(-8) : String(v)}
-                </span>
-              </span>
-            ))}
-          </div>
-          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <button
-              onClick={handleDeploy}
-              disabled={deploying}
-              style={{
-                padding: "10px 24px", fontSize: 14, fontWeight: 600,
-                background: deploying ? "#333" : "#16a34a", color: "#fff",
-                border: "none", borderRadius: 8, cursor: deploying ? "wait" : "pointer",
-              }}
-            >
-              {deploying ? "Deploying..." : "Confirm and Deploy"}
-            </button>
-            <button
-              onClick={() => { setResult(null); setError(null); }}
-              disabled={deploying}
-              style={{
-                padding: "10px 16px", fontSize: 14, background: "transparent",
-                color: "#888", border: "1px solid #333", borderRadius: 8, cursor: "pointer",
-              }}
-            >
-              Cancel
-            </button>
-            <span style={{ fontSize: 12, color: "#555" }}>
-              This is the AI's last contact. After deploy, execution is deterministic.
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* Deployed confirmation */}
-      {deployedAddress && (
-        <div style={{
-          padding: "16px 20px", marginBottom: 24, background: "#001a00",
-          border: "1px solid #004a00", borderRadius: 8,
-        }}>
-          <div style={{ fontSize: 13, color: "#4ade80", marginBottom: 6, fontWeight: 600 }}>
-            Deployed
-          </div>
-          <a
-            href={`https://testnet.arcscan.app/address/${deployedAddress}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: "#60a5fa", fontSize: 14, fontFamily: "monospace" }}
+      <main className="wrap">
+        {/* The difference */}
+        <section
+          className="dark-card"
+          style={{ background: C.dark, borderRadius: 24, padding: 48, marginBottom: 120 }}
+        >
+          <h2
+            style={{
+              fontSize: 36,
+              fontWeight: 600,
+              color: C.headingLight,
+              letterSpacing: "-0.02em",
+              margin: "0 0 40px",
+              maxWidth: 700,
+            }}
           >
-            {deployedAddress}
-          </a>
-          <div style={{ fontSize: 12, color: "#555", marginTop: 8 }}>
-            The AI is now permanently removed from this rule's execution path.
+            The AI compiles. It never executes.
+          </h2>
+          <div
+            className="two-col"
+            style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 48 }}
+          >
+            <p
+              style={{
+                fontSize: 16,
+                lineHeight: 1.7,
+                color: C.bodyDark,
+                margin: 0,
+                borderLeft: `4px solid ${C.mint}`,
+                paddingLeft: 24,
+              }}
+            >
+              Other tools keep an AI in the loop for every transaction. Mandate removes it
+              permanently after setup. The deployed contract is a fixed, verified template
+              with immutable parameters. Anyone can call execute(). No API key, no model,
+              no oracle.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+              {[
+                { label: "AI calls per rule", value: "1" },
+                { label: "AI calls per execution", value: "0" },
+              ].map((stat) => (
+                <div key={stat.label}>
+                  <div style={{ fontSize: 56, fontWeight: 700, color: C.mint, lineHeight: 1 }}>
+                    {stat.value}
+                  </div>
+                  <div style={{ fontSize: 14, color: C.bodyDark, marginTop: 8 }}>
+                    {stat.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section style={{ textAlign: "center", paddingBottom: 120 }}>
+          <h2
+            style={{
+              fontSize: 36,
+              fontWeight: 600,
+              color: C.headingDark,
+              letterSpacing: "-0.02em",
+              margin: "0 0 32px",
+            }}
+          >
+            Ready to set your first rule?
+          </h2>
+          <Link
+            className="btn"
+            href="/app"
+            style={{
+              display: "inline-block",
+              background: C.mint,
+              color: C.headingDark,
+              borderRadius: 50,
+              padding: "16px 40px",
+              fontSize: 18,
+              fontWeight: 600,
+              textDecoration: "none",
+            }}
+          >
+            Launch App
+          </Link>
+        </section>
+
+        {/* FAQ */}
+        <section style={{ paddingBottom: 120 }}>
+          <SectionLabel>FAQ</SectionLabel>
+          {FAQ.map((item, i) => {
+            const open = openFaq === i;
+            return (
+              <div key={item.q} style={{ borderBottom: `1px solid ${C.border}` }}>
+                <button
+                  onClick={() => setOpenFaq(open ? null : i)}
+                  aria-expanded={open}
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 24,
+                    background: "transparent",
+                    border: "none",
+                    padding: "24px 0",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    fontFamily: "inherit",
+                  }}
+                >
+                  <span style={{ fontSize: 18, fontWeight: 500, color: C.headingDark }}>
+                    {item.q}
+                  </span>
+                  <span
+                    style={{
+                      flexShrink: 0,
+                      width: 32,
+                      height: 32,
+                      borderRadius: "50%",
+                      background: C.mint,
+                      color: C.headingDark,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 14,
+                      transition: "transform 0.3s ease",
+                      transform: open ? "rotate(180deg)" : "none",
+                    }}
+                  >
+                    v
+                  </span>
+                </button>
+                <div
+                  className="faq-answer"
+                  // Generous ceiling: the transition needs a fixed value, and a
+                  // tight one silently clips the longest answer on narrow screens.
+                  style={{ maxHeight: open ? 600 : 0, opacity: open ? 1 : 0 }}
+                >
+                  <p
+                    style={{
+                      fontSize: 16,
+                      lineHeight: 1.7,
+                      color: C.bodyLight,
+                      margin: 0,
+                      paddingBottom: 24,
+                      maxWidth: 820,
+                    }}
+                  >
+                    {item.a}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </section>
+      </main>
+
+      {/* Footer */}
+      <footer style={{ background: C.dark, paddingTop: 80, paddingBottom: 48 }}>
+        <div className="wrap" style={{ textAlign: "center" }}>
+          <div
+            className="footer-title"
+            style={{
+              fontSize: 80,
+              fontWeight: 700,
+              letterSpacing: "-0.03em",
+              color: C.headingLight,
+              lineHeight: 1.1,
+            }}
+          >
+            Mandate
+          </div>
+          <div style={{ fontSize: 14, color: "#555555", marginTop: 16 }}>
+            Built on Arc with USDC and CCTP V2.
+          </div>
+          <div style={{ fontSize: 14, color: "#555555", marginTop: 8 }}>
+            AI touches money zero times after compile.
           </div>
         </div>
-      )}
-
-      {/* Deployed rules */}
-      {rules.length > 0 && (
-        <section style={{ marginTop: 48 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Active Rules</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {rules.map((rule) => (
-              <div
-                key={rule.address}
-                style={{
-                  padding: "14px 18px", background: "#141414",
-                  border: "1px solid #262626", borderRadius: 8,
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: "#d4d4d4" }}>
-                    {rule.template}
-                  </span>
-                  <a
-                    href={`https://testnet.arcscan.app/address/${rule.address}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ fontSize: 12, color: "#60a5fa", fontFamily: "monospace" }}
-                  >
-                    {rule.address.slice(0, 10)}...{rule.address.slice(-8)}
-                  </a>
-                </div>
-                {rule.sourceSentence && (
-                  <div style={{ fontSize: 13, color: "#777", marginTop: 4, fontStyle: "italic" }}>
-                    "{rule.sourceSentence}"
-                  </div>
-                )}
-                <div style={{ fontSize: 12, color: "#555", marginTop: 4 }}>
-                  {Object.entries(rule.params)
-                    .filter(([k]) => k !== "owner")
-                    .map(([k, v]) => `${k}: ${v}`)
-                    .join(" | ")}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Recent executions */}
-      {executions.length > 0 && (
-        <section style={{ marginTop: 48 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Recent Executions</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {executions.slice(0, 20).map((exec, i) => (
-              <div
-                key={i}
-                style={{
-                  padding: "10px 14px", background: "#141414",
-                  border: "1px solid #1a1a1a", borderRadius: 6, fontSize: 13,
-                }}
-              >
-                <span style={{ color: "#888" }}>
-                  {new Date(exec.timestamp).toLocaleTimeString()}
-                </span>
-                {" "}
-                <span style={{ color: "#a3a3a3" }}>{exec.template}</span>
-                {" "}
-                <span style={{ color: "#d4d4d4" }}>{exec.outcome}</span>
-                {exec.txHash && (
-                  <>
-                    {" "}
-                    <a
-                      href={`https://testnet.arcscan.app/tx/${exec.txHash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ color: "#60a5fa", fontSize: 12 }}
-                    >
-                      tx
-                    </a>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      <footer style={{ marginTop: 64, paddingTop: 24, borderTop: "1px solid #1a1a1a", fontSize: 12, color: "#444" }}>
-        Built on Arc with USDC and CCTP V2.
-        {" "}AI touches money zero times after compile.
       </footer>
-    </div>
+    </>
   );
 }
