@@ -1,0 +1,71 @@
+{
+  "project": "Mandate",
+  "pitch": "Treasury rules in plain English, executed as deterministic onchain flows on Arc. AI compiles one sentence into one of three fixed templates (Split, Sweep, Bridge), then leaves the loop.",
+  "hackathon": {
+    "name": "Encode x Arc Programmable Money Hackathon",
+    "track": "DeFi",
+    "final_deadline_utc": "2026-08-10T11:59:00Z",
+    "final_deadline_local_gmt7": "2026-08-10 18:59",
+    "internal_target": "2026-08-09",
+    "checkpoint2": "placeholder submitted 2026-07-27"
+  },
+  "links": {
+    "repo": "https://github.com/danielmartin227/mandate",
+    "deck_pdf": "https://github.com/danielmartin227/mandate/blob/master/presentation/cp2-deck.pdf",
+    "research_truth": "context/latest.md"
+  },
+  "workflow": {
+    "pipeline": "idea-to-phaseplan, gated",
+    "gate0_research": "approved 2026-07-27",
+    "pipeline_note": "2026-08-06: gates 1-3 collapsed into one build plan; separate artifacts could not be justified with 4 days left",
+    "gate1_constitution": "folded into plans/260806-1542-mandate-final-build/plan.md as standing constraints",
+    "gate2_spec": "collapsed; requirements live in the phase files",
+    "gate3_clarify": "collapsed; the 'what if AI compiles wrong' answer is the preview + confirm design in phase-02",
+    "gate4_plan": "DONE 2026-08-06: plans/260806-1542-mandate-final-build/",
+    "phase0_spike": "COMPLETE 2026-08-06: all 5 tests passed, Bridge confirmed IN",
+    "phase1_split_and_watcher": "COMPLETE 2026-08-06 (a day early): SplitRule live and verified at 0x56c0e4aa9610dfced62438bfa5db5cfd20c3cfab; keeper catches native and ERC-20 payments through one system-emitter filter; submittable MVP exists",
+    "phase3a_bridge": "BURN PATH COMPLETE 2026-08-06 (pulled forward from 9 Aug): contract calls depositForBurn itself; destination mint blocked on Base Sepolia ETH only",
+    "phase3b_bridge_interval": "DONE 2026-08-06: BridgeRule live and verified at 0x11016575c46b62a656c6e5dd261430ad97f9aec3 with onchain minInterval; TooSoon refusal proven with real surplus present, then bridged after the window; destinationDomain 26 now rejected in constructor. Superseded and NOT for demo: 0x650cc26b, 0x83a9e5a6",
+    "phase2_interpreter": "COMPLETE 2026-08-06: one claude-opus-5 call with structured outputs compiles a sentence to template params or refuses; human confirm gate before deploy; sentence-to-live-rule proven at 0x005861b9bc42957178aa2e2e47adf63eb5dcb915",
+    "phase2b_sweep": "DONE 2026-08-07: SweepRule live and verified at 0xa10269b7df3fa969381f9bfd251634a8a3abd751; wired end to end (interpreter, executor, state reader, keeper); swept 1.5 USDC above a 1 USDC floor. Three-template claim is now true",
+    "phase2c_backend_complete": "DONE 2026-08-07: interpreter battery 13/13 including Sweep vs Bridge disambiguation; keeper records executions to data/executions.json for the UI; scheduled ticker added for BridgeRule; poller defect fixed; Next app builds and all 4 API routes verified over HTTP. UI DESIGN is the only remaining build work, owner is inserting it"
+  },
+  "log": [
+    "2026-07-27: repo initialized, identity Daniel 227 / danielmartin4374227@gmail.com confirmed, gh account danielmartin227",
+    "2026-07-27: Phase 0 research by 3 agents, make-or-break claims re-verified first-party (CCTP Arc domain 26 to Base Sepolia domain 6; EIP-7708 system emitter logs every USDC movement)",
+    "2026-07-27: context/latest.md written (Gate 0 artifact), constitution appended to CLAUDE.md (Phase 1)",
+    "2026-07-27: ArcFlux verified by owner (github.com/Jkanishkha0305/ArcFlux); 4 differentiation deltas locked in context/latest.md",
+    "2026-07-27: CP2 package shipped: repo pushed public, 7-slide deck md+pdf, submission text delivered; placeholder submitted on portal",
+    "2026-07-27: repo renamed arc-standing-orders -> standing-orders -> mandate; project renamed to Mandate; pre-commit hook blocking em/en-dash installed and tested",
+    "2026-08-06: gates 1-3 collapsed into one 4-day build plan; Foundry dropped for solc-js + viem; rule contract IS the treasury; BridgeRule to call depositForBurn directly",
+    "2026-08-06: spike complete, all 5 tests passed. eth_subscribe with filters works on public WSS; native deposit into contract with receive() works and the 6d precompile sees it; emitter logs the deposit with to=contract; CCTP burn accepted maxFee 0 with NO minimum and attested in 11s. Bridge confirmed IN",
+    "2026-08-06: interpreter live. Caught a real compile defect (model filled readback prose but left savingsAddress empty, ~1 in 3) - validator failed closed and turned it into a refusal; fixed via sharper field descriptions + effort high. Only 3 files touch the model, entire runtime path greps clean.",
+    "2026-08-07: SweepRule wired end to end and deployed. Interpreter now knows three templates; battery 13/13 with two new refusal cases (scheduled same-chain sweep, partial sweep) and template-identity assertions so a sweep compiled as a bridge fails the test",
+    "2026-08-07: keeper defect found and fixed. HTTP poller swallowed every error and, on failure, re-read only the last 5 blocks forever; on Arc at ~5 blocks/sec that is a permanent blind spot. It silently missed a real payment during testing. Now scans a committed block cursor in chunks and surfaces errors. Re-tested: keeper caught a live payment and settled both a native and an ERC-20 deposit in one execute",
+    "2026-08-07: keeper writes to data/executions.json, so the UI execution log shows real activity instead of only deployments; entries carry a trigger (deploy/payment/schedule/manual)",
+    "2026-08-07: BridgeRule gets a scheduled ticker. Payment-reactive rules have a log to react to; an interval rule has none. The tick simulates first, so an early tick costs no gas and the contract still enforces the schedule",
+    "2026-08-07: two superseded BridgeRule versions (0x650cc26b, 0x83a9e5a6) were still in the store with an incompatible ruleState() shape, decoding to nonsense and about to be poked by the new ticker. Added a retired flag; keeper and API skip them",
+    "2026-08-07: next and react were in package.json but never installed, so the UI had never run. Installed; npm then reverted @anthropic-ai/sdk to 0.52.0 which has no output_config and broke structured outputs. Pinned 0.115.0. Next build needed a .js to .ts resolution alias for the shared src modules",
+    "2026-08-07: model prose is now dash-normalized in code, not just asked for in the prompt. A refusal reason came back with an em-dash, which no pre-commit hook can catch at runtime",
+    "2026-08-07: all plan phases 00-03 closed and checkboxes reconciled. README truth pass removed two overclaims: Circle App Kits (listed in the stack, never built, not a dependency) and Foundry (dropped for solc-js). Added live addresses and run instructions. See plans/reports/phase-completion-260807-1123-all-phases-closed.md",
+    "2026-08-07: FINAL DECK CONSTRAINT: cp2-deck.md still claims App Kits and Foundry. Left alone since it was already submitted 27 Jul, but the final deck must not repeat either claim"
+  ],
+  "next_steps": [
+    "OWNER: confirm project exists on Encode portal. Creation closes 2026-08-09 06:00 GMT+7, before the final deadline",
+    "OWNER: Base Sepolia ETH for the CCTP destination mint (burn + attestation proven; data/pending-mint.json replays it)",
+    "OWNER: inserting the UI design. Backend contract is stable: POST /api/compile, POST /api/deploy, GET /api/rules, GET /api/executions",
+    "OWNER: deployer 0x5A53...61E4 is down to ~0.8 USDC. Faucet is 20 USDC per 2h before demo recording",
+    "Commit: nothing is committed yet, the whole build is local. Biggest single risk",
+    "Hard freeze 2026-08-09 14:00, then video + deck + submission"
+  ],
+  "standing_constraints": [
+    "No em-dash or en-dash anywhere (pre-commit hook enforces on staged diff)",
+    "No AI attribution in commits or PRs",
+    "Identity: Daniel 227 / danielmartin4374227@gmail.com / gh danielmartin227",
+    "CLAUDE.md, .claude/, context/session-status-* stay out of the public repo",
+    "Never claim templates are audited; say fixed, verified templates",
+    "Faucet is 20 USDC per 2h per address (verified); the old ~1 USDC/day figure was WRONG. Deploy costs ~0.005 USDC, so volume is not a constraint",
+    "Hard feature freeze 2026-08-09 14:00 GMT+7; everything after is video, deck, submission"
+  ],
+  "updated": "2026-08-07"
+}

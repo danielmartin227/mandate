@@ -23,19 +23,56 @@ An AI interpreter maps your sentence to one of three fixed, verified rule templa
 | Template | Trigger | Action |
 |---|---|---|
 | Split | incoming USDC payment | route N% to a savings address |
-| Sweep | balance threshold on schedule | move surplus above a floor |
+| Sweep | balance above a floor | move the surplus to an address on Arc |
 | Bridge | schedule + threshold | CCTP V2 burn on Arc, mint on Base |
 
 ## Stack
 
 - **Arc Testnet** (chain 5042002) - USDC-native gas, sub-second finality
 - **USDC** - the treasury asset (native + ERC-20 interfaces)
-- **CCTP V2** - Arc (domain 26) to Base Sepolia (domain 6)
-- **Circle App Kits** - `@circle-fin/app-kit`: Send and Bridge modules
-- **Foundry** - template deployment and verification
+- **CCTP V2** - Arc (domain 26) to Base Sepolia (domain 6), called by the contract itself
+- **solc-js + viem** - template compilation, deployment, and Blockscout verification
+- **Next.js** - compile, preview, confirm, and the live execution feed
 - **Node + viem** - watcher/keeper
 - TypeScript throughout
 
+## Deployed on Arc Testnet
+
+Every template is live and source-verified on Arcscan.
+
+| Template | Address |
+|---|---|
+| Split | [`0x005861b9bc42957178aa2e2e47adf63eb5dcb915`](https://testnet.arcscan.app/address/0x005861b9bc42957178aa2e2e47adf63eb5dcb915) |
+| Sweep | [`0xa10269b7df3fa969381f9bfd251634a8a3abd751`](https://testnet.arcscan.app/address/0xa10269b7df3fa969381f9bfd251634a8a3abd751) |
+| Bridge | [`0x11016575c46b62a656c6e5dd261430ad97f9aec3`](https://testnet.arcscan.app/address/0x11016575c46b62a656c6e5dd261430ad97f9aec3) |
+
+The Split rule above was deployed from the sentence "route 5% of every incoming payment to 0x99189Bf6c5400045C1B464CF59FCFAaB2271c0C1", compiled by the interpreter and confirmed by a human before it went onchain.
+
+## Running it
+
+Needs `ANTHROPIC_API_KEY` and a funded Arc Testnet key in `.env`. Fund from [faucet.circle.com](https://faucet.circle.com).
+
+```bash
+npm install
+npm run dev          # the app on localhost:3000
+npm run watch        # the keeper, in a second terminal
+```
+
+Without the app:
+
+```bash
+npx tsx scripts/test-interpreter.ts                    # refusal and compile battery
+npx tsx scripts/deploy-rule.ts SweepRule <address> 500 # deploy a template directly
+npx tsx scripts/show-rule-state.ts                     # read every rule's onchain state
+npx tsx scripts/execute-rule-manually.ts <address>     # enforce a rule with no keeper running
+```
+
 ## Status
 
-Hackathon build for the Encode x Arc Programmable Money Hackathon (DeFi track). Research and architecture validated; implementation in progress. See `presentation/` for the current deck and `context/latest.md` for the research log.
+Hackathon build for the Encode x Arc Programmable Money Hackathon (DeFi track).
+
+Shipped and proven onchain: all three templates deployed and verified, sentence-to-live-rule through the interpreter, a keeper that catches native and ERC-20 payments through one emitter filter, and a CCTP burn on Arc that the contract initiates itself.
+
+Known limit: the CCTP destination mint on Base Sepolia is a separate offchain step by CCTP's design. The burn and the attestation are proven; `data/pending-mint.json` replays the mint once the destination address holds Base Sepolia gas.
+
+See `presentation/` for the deck and `context/latest.md` for the research log.
