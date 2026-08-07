@@ -8,10 +8,11 @@
 // Worth noting for the demo: the burn already happened onchain and the attestation
 // is a signed, public artifact. The funds are not stuck pending our backend. CCTP
 // destinationCaller is zero, so ANYONE can submit this and complete the transfer.
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, rmSync } from "node:fs";
 import { mintOnBaseSepolia } from "../src/bridge/cctp-attestation.js";
 
 const PENDING_FILE = "data/pending-mint.json";
+const COMPLETED_FILE = "data/completed-mints.json";
 if (!existsSync(PENDING_FILE)) {
   console.log("no pending mint");
   process.exit(0);
@@ -33,3 +34,18 @@ if (!result.minted) {
 }
 console.log("MINTED", result.explorer);
 console.log("BRIDGE COMPLETE: Arc -> Base Sepolia");
+
+// Record the completion and drop the pending file. A CCTP message can only be
+// used once, so leaving it in place would make the next run resubmit a spent
+// message and revert, which looks like a failure during a demo.
+const completed = existsSync(COMPLETED_FILE)
+  ? JSON.parse(readFileSync(COMPLETED_FILE, "utf8"))
+  : [];
+completed.push({
+  burnTx: pending.burnTx,
+  mintTx: result.explorer,
+  completedAt: new Date().toISOString(),
+});
+writeFileSync(COMPLETED_FILE, JSON.stringify(completed, null, 2));
+rmSync(PENDING_FILE);
+console.log(`recorded in ${COMPLETED_FILE}`);

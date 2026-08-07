@@ -47,7 +47,7 @@ Submission:
 
 - [x] BridgeRule.sol
 - [x] deploy + verify + live execution (burn initiated by the contract; `TooSoon` refusal proven with real surplus present, then bridged after the window)
-- [x] attestation + mint script (`src/bridge/fetch-attestation-and-mint.ts`, `scripts/complete-pending-mint.ts`; attestation proven in 11s, destination mint replays from `data/pending-mint.json`)
+- [x] attestation + mint script, run end to end 2026-08-07. Full round trip closed: burn `0x6706f936` on Arc, mint `0x2e1a4bd7` on Base Sepolia, 0.5 USDC confirmed received
 - [x] README truth pass (2026-08-07: removed the Circle App Kits claim, which was never built; removed Foundry, which was dropped for solc-js; corrected the Sweep trigger; added live addresses and run instructions)
 - [ ] 14:00 Sunday freeze (not yet reached)
 - [ ] video recorded (OWNER)
@@ -56,8 +56,8 @@ Submission:
 
 ## Blocked on owner, not on code
 
-- **Base Sepolia ETH** at the destination address. The burn and the attestation are proven; only the final `receiveMessage` needs gas on the destination chain. This is offchain by CCTP's design, so it does not weaken the onchain claim.
-- **Portal project creation**, which closes before the final deadline.
+- ~~**Base Sepolia ETH** at the destination address.~~ CLEARED 2026-08-07. Round trip complete.
+- **Portal project creation**, which closes before the final deadline. Still open.
 
 ## Success criteria
 

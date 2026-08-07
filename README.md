@@ -71,8 +71,15 @@ npx tsx scripts/execute-rule-manually.ts <address>     # enforce a rule with no 
 
 Hackathon build for the Encode x Arc Programmable Money Hackathon (DeFi track).
 
-Shipped and proven onchain: all three templates deployed and verified, sentence-to-live-rule through the interpreter, a keeper that catches native and ERC-20 payments through one emitter filter, and a CCTP burn on Arc that the contract initiates itself.
+Shipped and proven onchain: all three templates deployed and verified, sentence-to-live-rule through the interpreter, a keeper that catches native and ERC-20 payments through one emitter filter, and a complete CCTP transfer that the contract initiates itself.
 
-Known limit: the CCTP destination mint on Base Sepolia is a separate offchain step by CCTP's design. The burn and the attestation are proven; `data/pending-mint.json` replays the mint once the destination address holds Base Sepolia gas.
+**Full CCTP round trip, Arc to Base Sepolia:**
+
+| Step | Transaction |
+|---|---|
+| Burn on Arc (called by `BridgeRule`, no backend in the money path) | [`0x6706f936...a69af779`](https://testnet.arcscan.app/tx/0x6706f9367ecddade510f9718a73eef4066528e8cd50d230000a16b60a69af779) |
+| Mint on Base Sepolia | [`0x2e1a4bd7...738e93ed`](https://sepolia.basescan.org/tx/0x2e1a4bd764e3ce059cc805013c8df3409c6d376ad80b9dedae5e5cac738e93ed) |
+
+0.5 USDC left Arc and arrived on Base Sepolia. The destination mint is a separate step by CCTP's design, and `destinationCaller` is zero, so anyone can submit it: the funds were never waiting on our backend.
 
 See `presentation/` for the deck and `context/latest.md` for the research log.

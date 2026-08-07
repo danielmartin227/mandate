@@ -24,7 +24,7 @@
     "gate4_plan": "DONE 2026-08-06: plans/260806-1542-mandate-final-build/",
     "phase0_spike": "COMPLETE 2026-08-06: all 5 tests passed, Bridge confirmed IN",
     "phase1_split_and_watcher": "COMPLETE 2026-08-06 (a day early): SplitRule live and verified at 0x56c0e4aa9610dfced62438bfa5db5cfd20c3cfab; keeper catches native and ERC-20 payments through one system-emitter filter; submittable MVP exists",
-    "phase3a_bridge": "BURN PATH COMPLETE 2026-08-06 (pulled forward from 9 Aug): contract calls depositForBurn itself; destination mint blocked on Base Sepolia ETH only",
+    "phase3a_bridge": "COMPLETE 2026-08-07: full CCTP round trip proven. Contract calls depositForBurn itself; 0.5 USDC burned on Arc (0x6706f936) and minted on Base Sepolia (0x2e1a4bd7). No backend in the money path",
     "phase3b_bridge_interval": "DONE 2026-08-06: BridgeRule live and verified at 0x11016575c46b62a656c6e5dd261430ad97f9aec3 with onchain minInterval; TooSoon refusal proven with real surplus present, then bridged after the window; destinationDomain 26 now rejected in constructor. Superseded and NOT for demo: 0x650cc26b, 0x83a9e5a6",
     "phase2_interpreter": "COMPLETE 2026-08-06: one claude-opus-5 call with structured outputs compiles a sentence to template params or refuses; human confirm gate before deploy; sentence-to-live-rule proven at 0x005861b9bc42957178aa2e2e47adf63eb5dcb915",
     "phase2b_sweep": "DONE 2026-08-07: SweepRule live and verified at 0xa10269b7df3fa969381f9bfd251634a8a3abd751; wired end to end (interpreter, executor, state reader, keeper); swept 1.5 USDC above a 1 USDC floor. Three-template claim is now true",
@@ -48,11 +48,13 @@
     "2026-08-07: next and react were in package.json but never installed, so the UI had never run. Installed; npm then reverted @anthropic-ai/sdk to 0.52.0 which has no output_config and broke structured outputs. Pinned 0.115.0. Next build needed a .js to .ts resolution alias for the shared src modules",
     "2026-08-07: model prose is now dash-normalized in code, not just asked for in the prompt. A refusal reason came back with an em-dash, which no pre-commit hook can catch at runtime",
     "2026-08-07: all plan phases 00-03 closed and checkboxes reconciled. README truth pass removed two overclaims: Circle App Kits (listed in the stack, never built, not a dependency) and Foundry (dropped for solc-js). Added live addresses and run instructions. See plans/reports/phase-completion-260807-1123-all-phases-closed.md",
-    "2026-08-07: FINAL DECK CONSTRAINT: cp2-deck.md still claims App Kits and Foundry. Left alone since it was already submitted 27 Jul, but the final deck must not repeat either claim"
+    "2026-08-07: FINAL DECK CONSTRAINT: cp2-deck.md still claims App Kits and Foundry. Left alone since it was already submitted 27 Jul, but the final deck must not repeat either claim",
+    "2026-08-07: repo pushed public in 9 conventional commits as danielmartin227. Pre-push sweep caught two issues: .next build output was not ignored, and HKT-02-mandate-context.md named the other GitHub accounts, so it is now gitignored and the reference scrubbed from status.json",
+    "2026-08-07: CCTP round trip CLOSED. Mint submitted on Base Sepolia, 0.5 USDC confirmed received. complete-pending-mint.ts now archives to data/completed-mints.json and deletes the pending file, so a rerun cannot resubmit a spent message and revert mid-demo"
   ],
   "next_steps": [
     "OWNER: confirm project exists on Encode portal. Creation closes 2026-08-09 06:00 GMT+7, before the final deadline",
-    "OWNER: Base Sepolia ETH for the CCTP destination mint (burn + attestation proven; data/pending-mint.json replays it)",
+    "DONE 2026-08-07: Base Sepolia ETH funded, destination mint submitted, 0.5 USDC confirmed received on Base Sepolia. Deployer topped up to 20.8 USDC on Arc",
     "OWNER: inserting the UI design. Backend contract is stable: POST /api/compile, POST /api/deploy, GET /api/rules, GET /api/executions",
     "OWNER: deployer 0x5A53...61E4 is down to ~0.8 USDC. Faucet is 20 USDC per 2h before demo recording",
     "Commit: nothing is committed yet, the whole build is local. Biggest single risk",
