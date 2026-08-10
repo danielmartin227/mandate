@@ -1,6 +1,10 @@
 // Persistence for deployed rules. A JSON file is the right size for this project:
 // a handful of rules, single process, no concurrent writers.
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+// Statically imported so a serverless bundle carries the store even when the
+// working directory it was written in is gone. Local runs still read the file,
+// which is the only copy that changes.
+import bundledRules from "../../data/deployed-rules.json" with { type: "json" };
 
 export const RULES_FILE = "data/deployed-rules.json";
 
@@ -21,7 +25,7 @@ export type DeployedRule = {
 };
 
 export function loadRules(): DeployedRule[] {
-  if (!existsSync(RULES_FILE)) return [];
+  if (!existsSync(RULES_FILE)) return bundledRules as unknown as DeployedRule[];
   return JSON.parse(readFileSync(RULES_FILE, "utf8"));
 }
 

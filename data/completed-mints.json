@@ -1,0 +1,8 @@
+[
+  {
+    "burnTx": "0x6706f9367ecddade510f9718a73eef4066528e8cd50d230000a16b60a69af779",
+    "mintTx": "https://sepolia.basescan.org/tx/0x2e1a4bd764e3ce059cc805013c8df3409c6d376ad80b9dedae5e5cac738e93ed",
+    "amountUsdc": "0.5",
+    "completedAt": "2026-08-07T07:35:00.000Z"
+  }
+]

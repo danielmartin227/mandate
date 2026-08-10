@@ -2,6 +2,8 @@
 // The watcher appends here after each execute() call; the UI reads it.
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 
+import bundledExecutions from "../../data/executions.json" with { type: "json" };
+
 const EXECUTIONS_FILE = "data/executions.json";
 
 export type Execution = {
@@ -16,7 +18,7 @@ export type Execution = {
 };
 
 export function loadExecutions(): Execution[] {
-  if (!existsSync(EXECUTIONS_FILE)) return [];
+  if (!existsSync(EXECUTIONS_FILE)) return bundledExecutions as unknown as Execution[];
   try {
     return JSON.parse(readFileSync(EXECUTIONS_FILE, "utf8"));
   } catch {
