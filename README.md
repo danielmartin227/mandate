@@ -12,6 +12,10 @@ An AI interpreter maps your sentence to one of three fixed, verified rule templa
 
 **AI touches money zero times.** It compiles one sentence into template parameters at setup, then the system is provably AI-free.
 
+**Live demo:** https://mandate-olive.vercel.app
+
+Compile a sentence there and it runs the real interpreter; the rules list and execution feed are the real onchain history below. Deploying a new rule from the hosted app is disabled, because the rule store is a JSON file and the serverless filesystem is read only. To deploy from a sentence, clone and run locally.
+
 ## How it works
 
 1. **Compile (once, with AI):** your sentence goes through a constrained LLM call that returns either `{template, parameters}` or a refusal. Ambiguous sentences are refused, never guessed.
@@ -79,6 +83,12 @@ Shipped and proven onchain: all three templates deployed and verified, sentence-
 |---|---|
 | Burn on Arc (called by `BridgeRule`, no backend in the money path) | [`0x6706f936...a69af779`](https://testnet.arcscan.app/tx/0x6706f9367ecddade510f9718a73eef4066528e8cd50d230000a16b60a69af779) |
 | Mint on Base Sepolia | [`0x2e1a4bd7...738e93ed`](https://sepolia.basescan.org/tx/0x2e1a4bd764e3ce059cc805013c8df3409c6d376ad80b9dedae5e5cac738e93ed) |
+
+**A rule enforced by a real incoming payment, not a button:**
+
+| Step | Transaction |
+|---|---|
+| Split executed after a payment landed: 0.7 USDC in, 0.035 USDC routed to savings | [`0x15203d9a...97e708a8`](https://testnet.arcscan.app/tx/0x15203d9a5559beb6666c4d1c87d67f1c2576b394c579d8393e28f84797e708a8) |
 
 0.5 USDC left Arc and arrived on Base Sepolia. The destination mint is a separate step by CCTP's design, and `destinationCaller` is zero, so anyone can submit it: the funds were never waiting on our backend.
 
