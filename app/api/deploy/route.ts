@@ -5,8 +5,17 @@ import { NextResponse } from "next/server";
 import { deployRuleTemplate } from "../../../src/rules/deploy-rule-template.js";
 import { appendExecution } from "../../../src/rules/execution-store.js";
 
+/// Deploying reads Solidity from contracts/ and signs with a local key. On a
+/// hosted build neither is available, so refuse in one plain sentence rather
+/// than letting a filesystem error reach the browser.
+const DEPLOY_UNAVAILABLE =
+  "Deploying a rule runs from the CLI in this build, because it compiles Solidity and signs with a local key. Clone the repo and follow the README to deploy this rule to Arc.";
+
 export async function POST(request: Request) {
   try {
+    if (process.env.VERCEL) {
+      return NextResponse.json({ error: DEPLOY_UNAVAILABLE }, { status: 501 });
+    }
     const body = await request.json();
     const { template, deployArgs, sentence } = body ?? {};
 
@@ -48,9 +57,11 @@ export async function POST(request: Request) {
     });
   } catch (e: any) {
     console.error("[/api/deploy]", e);
-    return NextResponse.json(
-      { error: e.message ?? "deploy failed" },
-      { status: 500 },
-    );
+    // A missing contracts/ or artifacts/ file means this build cannot compile
+    // templates. Say that, rather than surfacing a raw filesystem error.
+    const message = /ENOENT|no such file/i.test(String(e?.message))
+      ? DEPLOY_UNAVAILABLE
+      : (e.message ?? "deploy failed");
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

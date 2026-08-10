@@ -34,6 +34,11 @@ type Execution = {
   trigger?: string;
 };
 
+/// Deploying compiles Solidity from contracts/ and signs with a local key, so
+/// it only works where there is a writable filesystem: local, not the hosted
+/// build. Set at build time in next.config.ts.
+const DEPLOY_FROM_BROWSER = process.env.NEXT_PUBLIC_DEPLOY_FROM_BROWSER !== "off";
+
 export default function AppPage() {
   const [sentence, setSentence] = useState("");
   const [compiling, setCompiling] = useState(false);
@@ -243,16 +248,17 @@ export default function AppPage() {
               <button
                 className="btn"
                 onClick={handleDeploy}
-                disabled={deploying}
+                disabled={deploying || !DEPLOY_FROM_BROWSER}
+                title={DEPLOY_FROM_BROWSER ? undefined : "Deploying runs from the CLI in this build"}
                 style={{
-                  background: deploying ? C.loading : C.mint,
-                  color: deploying ? C.disabledText : C.headingDark,
+                  background: deploying || !DEPLOY_FROM_BROWSER ? C.loading : C.mint,
+                  color: deploying || !DEPLOY_FROM_BROWSER ? C.disabledText : C.headingDark,
                   border: "none",
                   borderRadius: 12,
                   padding: "12px 28px",
                   fontSize: 15,
                   fontWeight: 600,
-                  cursor: deploying ? "wait" : "pointer",
+                  cursor: deploying ? "wait" : DEPLOY_FROM_BROWSER ? "pointer" : "not-allowed",
                   fontFamily: "inherit",
                 }}
               >
@@ -279,6 +285,13 @@ export default function AppPage() {
                 This is the AI&apos;s last contact. After deploy, execution is deterministic.
               </span>
             </div>
+            {!DEPLOY_FROM_BROWSER && (
+              <p style={{ fontSize: 13, color: C.muted, margin: "14px 0 0", lineHeight: 1.5 }}>
+                Deploying a rule runs from the CLI in this build, because it compiles Solidity
+                and signs with a local key. Clone the repo and follow the README to deploy this
+                rule to Arc. The rules below were deployed that way and are live onchain.
+              </p>
+            )}
           </div>
         )}
 
