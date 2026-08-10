@@ -2,109 +2,113 @@
 
 Target 2:30. Five shots. Encode x Arc Programmable Money Hackathon, DeFi track.
 
+Live app: https://mandate-olive.vercel.app
+Repo: https://github.com/danielmartin227/mandate
+
 Narration is pre-split into copy-ready blocks under 450 characters for CapCut text-to-speech. Character count is beside each block. Acronyms and numbers are respelled the way a speech engine says them correctly.
 
-Live app: https://mandate-olive.vercel.app
+Every click below was walked on the deployed site before the line was written. Verify notes give the real numbers that will be on screen.
 
-Everything described below was run before the line was written. Verify notes give the real numbers that will be on screen.
-
----
-
-## Shot 1 - The difference (0:00 - 0:24)
-
-**Screen:** the landing page at `https://mandate-olive.vercel.app`, top of page, headline visible. Slow scroll to the three-template table, then stop.
-
-**Clicks:**
-1. Open `https://mandate-olive.vercel.app` in a clean browser window, no bookmarks bar.
-2. Scroll down slowly to the rule template table. Stop there.
-
-**Narration**
-
-Block 1A (294 chars)
-> Mandate is treasury autopilot on Arc. Here is the difference. An A I interpreter reads your treasury rule once, in plain English, then leaves the loop permanently. Execution is deterministic. Same rule, same input, same result, every time. No agent sits in the money path deciding what to send.
-
-**Verify:** headline on screen reads "Treasury rules in plain English, executed as deterministic onchain flows on Arc." Table lists exactly three templates: Split, Sweep, Bridge.
+**Do not record a Confirm and Deploy click.** On the hosted build that button is deliberately disabled, with a sentence underneath explaining that deploying runs from the CLI. The onchain evidence in this video comes from rules deployed earlier, which is what the narration says.
 
 ---
 
-## Shot 2 - Compile a sentence, and watch it refuse (0:24 - 1:12)
+## Shot 1 - The difference (0:00 - 0:22)
 
-**Screen:** `https://mandate-olive.vercel.app/app`, the compile box.
+**Screen:** https://mandate-olive.vercel.app, top of page.
 
 **Clicks:**
-1. Click the sentence input.
-2. Type: `route 10% of every incoming payment to 0x99189Bf6c5400045C1B464CF59FCFAaB2271c0C1`
-3. Click Compile. Wait for the readback panel. Hold on it three seconds.
-4. Select all in the input, type: `move some money to savings when it feels right`
-5. Click Compile. Hold on the refusal three seconds.
+1. Open the URL in a clean window, no bookmarks bar.
+2. Hold on the headline three seconds, then scroll slowly to the numbered "How it works" steps.
 
 **Narration**
 
-Block 2A (306 chars)
-> I type one sentence. Route ten percent of every incoming payment to this savings address. The interpreter compiles it into one of exactly three fixed templates, Split, Sweep, or Bridge, and reads the rule back before anything goes onchain. Ten percent to that address, ninety percent stays in the treasury.
+Block 1A (282 chars)
+> Mandate is treasury autopilot on Arc. Here is the difference. An A I interpreter reads your treasury rule once, in plain English, then leaves the loop permanently. Execution is deterministic. Same rule, same input, same result. No agent sits in the money path deciding what to send.
 
-Block 2B (222 chars)
+**Verify:** headline reads "Treasury Rules in Plain English". Subhead reads "AI compiles your intent once into a fixed onchain template, then leaves permanently. No model in the loop. No custody. No trust." Pills on screen: "Zero AI after compile", "3 fixed templates", "Deterministic execution".
+
+---
+
+## Shot 2 - The centre beat: sentence in, preview out (0:22 - 1:14)
+
+**Screen:** https://mandate-olive.vercel.app/app
+
+**Clicks:**
+1. Click "Launch App" in the top pill, or go straight to `/app`.
+2. Click the "Describe your treasury rule" input.
+3. Type: `route 10% of every incoming payment to 0x99189Bf6c5400045C1B464CF59FCFAaB2271c0C1`
+4. Click Compile. It takes roughly eight to twelve seconds. Keep rolling and cut the wait later.
+5. Hold on the PREVIEW: SPLITRULE card four seconds.
+6. Hold specifically on the small grey line to the right of the buttons: "This is the AI's last contact. After deploy, execution is deterministic." Three seconds, no motion. Zoom in if your editor allows.
+7. Scroll down to the Active Rules panel and hold three seconds.
+
+**Narration**
+
+Block 2A (292 chars)
+> I type one sentence. Route ten percent of every incoming payment to this savings address. It compiles into one of exactly three fixed templates, Split, Sweep, or Bridge, and reads the rule back before anything can go onchain. Ten percent to that address, ninety percent stays in the treasury.
+
+Block 2B (291 chars)
+> And look at the line under the confirm button. The product tells you exactly where the model stops being involved. Past that point there is no prompt and no inference. Below are rules that already went through this screen earlier. They are live contracts on Arc holding real testnet U S D C.
+
+**Verify:** the card header reads "PREVIEW: SPLITRULE". The readback prose is generated per run and its wording varies, so do not caption it word for word; the numbers do not vary. Fields shown: `savingsAddress: 0x99189Bf6...2271c0C1` and `savingsBps: 1000`. Active Rules lists exactly four: SplitRule `0x56c0e4aa...20c3cfab`, BridgeRule `0x11016575...97f9aec3`, SplitRule `0x005861b9...b5dcb915` (which carries its source sentence in italics, "route 5% of every incoming payment to 0x99189Bf6c5400045C1B464CF59FCFAaB2271c0C1"), SweepRule `0xa10269b7...a3abd751`. Confirm and Deploy is greyed out with a sentence beneath it. That is expected. Do not click it.
+
+---
+
+## Shot 3 - It refuses rather than guesses (1:14 - 1:36)
+
+**Screen:** same page, the input.
+
+**Clicks:**
+1. Select all in the input and type: `move some money to savings when it feels right`
+2. Click Compile. Hold on the yellow Refused block four seconds.
+
+**Narration**
+
+Block 3A (222 chars)
 > Now watch it refuse. Move some money to savings when it feels right. No address, no share, no trigger. It refuses instead of guessing, and says what is missing. A rule that cannot be stated exactly never reaches the chain.
 
-**Verify:** compile returns template `SplitRule`, readback "On every incoming USDC payment, 10% (1000 basis points) will be routed to 0x99189Bf6c5400045C1B464CF59FCFAaB2271c0C1 and the remaining 90% will stay in the treasury." Refusal reason begins "This sentence gives no savings address, no share or amount, and no definite trigger". Both were run live against the API on 2026-08-10.
+**Verify:** a yellow bar labelled "Refused" appears with the reason "This sentence gives no savings address, no share or amount, and no definite trigger, so there is nothing I can compile." The wording is model generated and can vary slightly between runs; the refusal itself is deterministic behaviour, verified live on 2026-08-10.
 
 ---
 
-## Shot 3 - It is really onchain (1:12 - 1:50)
+## Shot 4 - Onchain evidence (1:36 - 2:14)
 
-**Screen:** the deployed rules list, then a browser tab on Arcscan.
+**Screen:** Arcscan, then the Recent Executions panel, then the README CCTP table.
 
 **Clicks:**
-1. Scroll to the Deployed rules list. Four rules are listed.
-2. Click the Split rule address `0x005861b9...5dcb915` to open Arcscan.
-3. On Arcscan, point at the green verified contract badge and the contract name.
-4. Switch back to the app, scroll to the Execution feed.
+1. In Active Rules, click the green address `0x005861b9...b5dcb915`. Arcscan opens.
+2. Hold on "Contract name: SplitRule" and the green tick on the Contract tab, three seconds.
+3. Back to the app, scroll to Recent Executions, hold three seconds.
+4. Open the README on GitHub, scroll to the CCTP round trip table, click the burn link, then the mint link.
 
 **Narration**
 
-Block 3A (335 chars)
-> The parameters are written into a Solidity template deployed on Arc. Here it is on Arcscan. Source verified, named Split Rule. Execute is permissionless, so our backend is never in the money path. And the execution feed is not a mock up. A real payment arrived, zero point seven U S D C, and zero point zero three five went to savings.
+Block 4A (288 chars)
+> Here is that rule on Arcscan. Source verified, named Split Rule. Execute is permissionless, so our backend is never in the money path. And the execution feed is not a mock up. A real incoming payment triggered a run: zero point seven U S D C in, zero point zero three five out to savings.
 
-**Verify:** Arcscan shows contract name `SplitRule`, verified true, at `0x005861b9bc42957178aa2e2e47adf63eb5dcb915`. Execution feed shows two entries: SplitRule "split 0.7 USDC, routed 0.035 to savings" trigger payment, and SweepRule "swept 1.5 USDC above the floor". The payment run is transaction `0x15203d9a...97e708a8`, status ok, method execute.
+Block 4B (278 chars)
+> Cross chain uses C C T P version two, and the contract calls the burn itself. Zero point five U S D C burned on Arc, minted on Base Sepolia, both linked in the read me. To be straight about scope: no Circle App Kits, nothing simulated in the money path, all Arc testnet U S D C.
+
+**Verify:** Arcscan page for `0x005861b9bc42957178aa2e2e47adf63eb5dcb915` shows Contract name SplitRule, a green tick on the Contract tab, Balance 2.565 USDC, Transactions 5. Recent Executions shows two rows: `11:13:44 AM SplitRule split 0.7 USDC, routed 0.035 to savings` tagged payment, and `11:04:04 AM SweepRule swept 1.5 USDC above the floor` tagged manual, each with a "tx" link. Burn `0x6706f936...a69af779` on Arcscan, method execute, status ok, token transfer into TokenMinterV2 tagged Circle CCTP. Mint `0x2e1a4bd7...738e93ed` on Base Sepolia, five hundred thousand units of six-decimal USDC to `0x5A5383...EC61E4`. All confirmed by direct chain and explorer queries on 2026-08-10.
 
 ---
 
-## Shot 4 - Cross chain, and what is honest (1:50 - 2:18)
+## Shot 5 - Hold the URL (2:14 - 2:30)
 
-**Screen:** README section "Full CCTP round trip", then the Arcscan burn transaction, then the Basescan mint transaction.
+**Screen:** static frame. Project name, one line of positioning, the live URL in large type, the repo URL beneath. No motion.
 
-**Clicks:**
-1. Open the GitHub README, scroll to the CCTP round trip table.
-2. Click the burn link. Let the Arcscan page load, showing the token transfer row.
-3. Back, click the mint link. Let Basescan load and show the 0.5 USDC transfer.
+**Clicks:** none. Hold at least twelve seconds.
 
 **Narration**
 
-Block 4A (233 chars)
-> Cross chain uses C C T P version two, and the contract calls it itself. Zero point five U S D C burned on Arc, minted on Base Sepolia. Here is the burn, here is the mint. Both links are in the read me, so you can check them yourself.
+Block 5A (163 chars)
+> Mandate. Treasury rules in plain English, executed deterministically on Arc, in U S D C. The live app and the repository are on screen now. Thank you for watching.
 
-Block 4B (254 chars)
-> To be straight about scope. Real: three templates deployed and source verified on Arc, the interpreter, the keeper, and that completed C C T P transfer. Not used: Circle App Kits. Nothing in the money path is simulated. All funds are Arc testnet U S D C.
-
-**Verify:** burn transaction `0x6706f936...a69af779` on Arcscan, from `0x5A5383...EC61E4`, to contract `BridgeRule` `0x11016575...97f9Aec3`, method execute, status ok, token transfer to `TokenMinterV2` tagged Circle CCTP. Mint transaction `0x2e1a4bd7...738e93ed` on Base Sepolia, mint of 500000 units of USDC `0x036CbD53...F3dCF7e` (six decimals, so zero point five) to `0x5A5383...EC61E4`. Both confirmed by direct chain and explorer queries on 2026-08-10.
-
----
-
-## Shot 5 - Hold the URL (2:18 - 2:32)
-
-**Screen:** static frame. Project name, one line of positioning, the live URL in large type, and the repo URL beneath it. Hold with no motion.
-
-**Clicks:** none. Hold the frame at least twelve seconds.
-
-**Narration**
-
-Block 5A (147 chars)
-> Mandate. Treasury rules in plain English, executed deterministically on Arc, in U S D C. The live app and every contract address are on screen now.
-
-**Verify:** URL on the frame must be the same `https://mandate-olive.vercel.app` used in Shot 1, and it must load in a fresh browser. Repo is `github.com/danielmartin227/mandate`.
+**Verify:** frame shows `https://mandate-olive.vercel.app` and `github.com/danielmartin227/mandate`, both loading in a fresh browser.
 
 ---
 
 ## Rubric words spoken aloud
 
-Arc, U S D C, C C T P, Base Sepolia, deterministic, source verified, permissionless. Circle App Kits is named only in the honesty beat, as not used.
+Arc, U S D C, C C T P, Base Sepolia, deterministic, source verified, permissionless. Circle App Kits is named once, in the honesty beat, as not used.
