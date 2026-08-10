@@ -2,6 +2,10 @@
 
 Encode x Arc Programmable Money Hackathon - DeFi track - Final submission (2026-08-10)
 
+> Narrative record only. The deck that ships is `final-deck.html`, which is what
+> `scripts/render-deck-pdf.cjs` renders to `final-deck.pdf` and publishes to
+> `/deck.pdf` and `/deck.html`. Edit the HTML to change the deck.
+
 ---
 
 ## Slide 1 - Mandate
