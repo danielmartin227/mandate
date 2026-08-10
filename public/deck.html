@@ -1,0 +1,39 @@
+<!doctype html><html lang="en"><meta charset="utf-8">
+<title>Mandate - Final Submission Deck</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+* { box-sizing:border-box; }
+body { margin:0; padding:32px 16px 64px; background:#eef1f5; color:#10233a;
+  font-family:"Segoe UI", Arial, sans-serif; }
+.wrap { max-width:1000px; margin:0 auto; }
+.bar { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-bottom:24px; font-size:15px; }
+.bar a { color:#0b3b6f; font-weight:600; text-decoration:none; }
+.bar a:hover { text-decoration:underline; }
+section { background:#fff; border-radius:12px; padding:40px 44px; margin-bottom:24px;
+  box-shadow:0 1px 4px rgba(16,35,58,0.10); }
+h1 { font-size:36px; margin:0 0 16px; letter-spacing:-0.5px; }
+h2 { font-size:27px; margin:0 0 18px; color:#0b3b6f; }
+h3 { font-size:21px; margin:0 0 12px; color:#0b3b6f; }
+p { font-size:17px; line-height:1.6; margin:0 0 12px; }
+li { font-size:17px; line-height:1.6; margin-bottom:8px; }
+ul, ol { margin:0 0 12px; padding-left:24px; }
+code { font-family:Consolas, monospace; font-size:15px; background:#eef2f7; padding:1px 5px; border-radius:3px; }
+.scroll { overflow-x:auto; }
+table { border-collapse:collapse; width:100%; margin:8px 0 12px; }
+th, td { border:1px solid #c8d4e2; padding:8px 11px; font-size:15px; text-align:left; vertical-align:top; }
+th { background:#0b3b6f; color:#fff; font-weight:600; }
+strong { color:#0b3b6f; }
+@media (max-width:600px) { section { padding:28px 20px; } h1 { font-size:28px; } h2 { font-size:22px; } }
+</style>
+<div class="wrap">
+<div class="bar"><a href="/">&larr; Mandate</a><span>&middot;</span><a href="/deck.pdf">Download PDF</a></div>
+<section><h1>Mandate - Final Submission Deck</h1><p>Encode x Arc Programmable Money Hackathon - DeFi track - Final submission (2026-08-10)</p></section>
+<section><h2>Slide 1 - Mandate</h2><p><strong>Treasury rules in plain English, executed as deterministic onchain flows on Arc.</strong></p><p>"route 10% of every incoming payment to savings" - typed once, enforced forever.</p><p>An AI interpreter reads the rule once, then leaves the loop permanently. <strong>AI touches money zero times.</strong></p><p>Live app: https://mandate-olive.vercel.app</p><p>Repo: github.com/danielmartin227/mandate</p></section>
+<section><h2>Slide 2 - The problem</h2><ul><li>Onchain treasuries are managed by hand: someone watches balances, splits revenue, tops up chains.</li><li>Automation today means either writing custom contracts (slow, risky) or trusting an AI agent with execution (unauditable: the same prompt can produce different transfers tomorrow).</li><li>Finance teams already work with mandates: fixed instructions, executed exactly. Crypto treasuries deserve the same guarantee.</li></ul></section>
+<section><h2>Slide 3 - How it works: sentence to template, then AI leaves</h2><ol><li><strong>Compile (once, with AI):</strong> one constrained LLM call maps the sentence to one of exactly three fixed templates - Split, Sweep, Bridge - and fills the parameters. Ambiguity is refused, never guessed. A human confirms the plain-English readback before anything is deployed.</li><li><strong>Deploy:</strong> parameters land in a thin, Blockscout-verified Solidity template on Arc. <code>execute()</code> is permissionless.</li><li><strong>Run (forever, no AI):</strong> a keeper watches incoming USDC through Arc's EIP-7708 system emitter and ticks scheduled rules, then calls <code>execute()</code>. Same event in, same transfer out, every time.</li></ol><p>The rule survives even if our backend dies: anyone can call <code>execute()</code>.</p></section>
+<section><h2>Slide 4 - Differentiation</h2><div class="scroll"><table><thead><tr><th></th><th>arc-fintech (Circle sample)</th><th>ArcFlux (prior hackathon)</th><th>Mandate</th></tr></thead><tbody><tr><td>Standing rules</td><td>none, manual buttons</td><td>scheduled push payments</td><td>reactive treasury policy on incoming funds</td></tr><tr><td>AI's role</td><td>none</td><td>GPT-4 parses every command; Guardian Agent scores every transaction</td><td>compiled out after setup, zero AI at execution</td></tr><tr><td>Onchain contracts</td><td>none</td><td>none (custodial wallets + Python backend)</td><td>verified templates, permissionless execute()</td></tr><tr><td>Cross-chain</td><td>bridging UI</td><td>explicitly none</td><td>CCTP V2 called by the contract itself, Arc to Base</td></tr></tbody></table></div></section>
+<section><h2>Slide 5 - Tech stack</h2><ul><li><strong>Arc Testnet</strong> (chain 5042002): USDC-native gas, sub-second finality</li><li><strong>USDC</strong>: the treasury asset; Arc's dual native (18d) and ERC-20 (6d) interfaces both handled</li><li><strong>CCTP V2</strong>: Arc (domain 26) to Base Sepolia (domain 6), attestation via Circle's Iris API, <code>depositForBurn</code> called by the rule contract</li><li><strong>EIP-7708 watcher</strong>: Arc's system emitter logs every USDC movement, so one filter catches native and ERC-20 incoming payments (an Arc-specific capability)</li><li><strong>solc-js + viem</strong>: template compilation, deployment, Blockscout verification</li><li><strong>Next.js</strong>: compile, preview, confirm, and the live execution feed</li><li>TypeScript throughout</li></ul></section>
+<section><h2>Slide 6 - Shipped and verifiable</h2><p>All three templates are live and source-verified on Arc Testnet:</p><div class="scroll"><table><thead><tr><th>Template</th><th>Address</th></tr></thead><tbody><tr><td>Split</td><td>0x005861b9bc42957178aa2e2e47adf63eb5dcb915</td></tr><tr><td>Sweep</td><td>0xa10269b7df3fa969381f9bfd251634a8a3abd751</td></tr><tr><td>Bridge</td><td>0x11016575c46b62a656c6e5dd261430ad97f9aec3</td></tr></tbody></table></div><ul><li><strong>Sentence to live rule:</strong> the Split rule above was compiled by the interpreter from a typed sentence and confirmed by a human before deploy.</li><li><strong>Real payment, real enforcement:</strong> 0.7 USDC arrived, 0.035 USDC routed to savings, tx <code>0x15203d9a...97e708a8</code>.</li><li><strong>Full CCTP round trip:</strong> 0.5 USDC burned on Arc (<code>0x6706f936...a69af779</code>) and minted on Base Sepolia (<code>0x2e1a4bd7...738e93ed</code>). <code>destinationCaller</code> is zero, so anyone can submit the mint.</li></ul><p>Not used: Circle App Kits. Nothing in the money path is simulated. All funds are Arc testnet USDC.</p></section>
+<section><h2>Slide 7 - Why Arc makes this possible</h2><ul><li>On every other EVM chain, native-token payments leave <strong>no logs</strong>, so a splitter must poll balances or trace blocks.</li><li>Arc emits an ERC-20-style <code>Transfer</code> log from the system emitter <code>0xffff...fffe</code> for <strong>every</strong> USDC movement, native or ERC-20 (EIP-7708).</li><li>One log filter gives a complete, deterministic feed of incoming treasury payments.</li><li>That single property is what lets a fixed onchain rule react to real revenue with no oracle, no indexer, and no AI.</li></ul></section>
+</div>
+</html>

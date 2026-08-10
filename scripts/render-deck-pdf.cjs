@@ -1,8 +1,15 @@
-// Renders presentation/final-deck.md to a paged PDF via headless Edge.
+// Renders presentation/final-deck.md to a paged PDF via headless Edge, then
+// publishes both the PDF and a scrollable HTML version into public/ so the
+// deployed site serves them directly (no third-party PDF viewer in between).
 // Usage: node scripts/render-deck-pdf.cjs
 const fs = require('fs');
 const { execFileSync } = require('child_process');
 const path = require('path');
+
+// Becomes the PDF's internal /Title, which is the text a reader sees in the
+// browser tab. Without an explicit <title> the print engine falls back to the
+// temp file name, so this must stay in sync with the deck itself.
+const DECK_TITLE = 'Mandate - Final Submission Deck';
 
 const md = fs.readFileSync('presentation/final-deck.md', 'utf8');
 const slides = md.split(/\n---\n/).map(s => s.trim()).filter(Boolean);
@@ -43,7 +50,9 @@ function render(block) {
   return out;
 }
 
-const html = `<!doctype html><meta charset="utf-8"><style>
+const bodies = slides.map(render);
+
+const html = `<!doctype html><meta charset="utf-8"><title>${esc(DECK_TITLE)}</title><style>
 @page { size: 1280px 720px; margin: 0; }
 * { box-sizing: border-box; }
 body { margin:0; font-family: "Segoe UI", Arial, sans-serif; color:#10233a; }
@@ -59,7 +68,7 @@ table { border-collapse:collapse; width:100%; margin:8px 0 14px; }
 th, td { border:1px solid #c8d4e2; padding:8px 11px; font-size:17px; text-align:left; vertical-align:top; }
 th { background:#0b3b6f; color:#fff; font-weight:600; }
 strong { color:#0b3b6f; }
-</style>` + slides.map(s => `<section>${render(s)}</section>`).join('');
+</style>` + bodies.map(b => `<section>${b}</section>`).join('');
 
 const tmp = path.resolve('presentation/.deck-render.html');
 fs.writeFileSync(tmp, html);
@@ -77,3 +86,51 @@ execFileSync(edge, [
 ], { stdio: 'inherit' });
 fs.unlinkSync(tmp);
 console.log('wrote', out, fs.statSync(out).size, 'bytes');
+
+// Publish into the Next.js static directory: files under public/ are served
+// from the deployment root, so these land on /deck.pdf and /deck.html.
+const pub = path.resolve('public');
+fs.mkdirSync(pub, { recursive: true });
+
+const pdfCopy = path.join(pub, 'deck.pdf');
+fs.copyFileSync(out, pdfCopy);
+console.log('wrote', pdfCopy, fs.statSync(pdfCopy).size, 'bytes');
+
+// Same slides, stacked as a scrollable page for readers who would rather not
+// open a PDF. Slides become auto-height cards instead of fixed 720px pages.
+const page = `<!doctype html><html lang="en"><meta charset="utf-8">
+<title>${esc(DECK_TITLE)}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+* { box-sizing:border-box; }
+body { margin:0; padding:32px 16px 64px; background:#eef1f5; color:#10233a;
+  font-family:"Segoe UI", Arial, sans-serif; }
+.wrap { max-width:1000px; margin:0 auto; }
+.bar { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-bottom:24px; font-size:15px; }
+.bar a { color:#0b3b6f; font-weight:600; text-decoration:none; }
+.bar a:hover { text-decoration:underline; }
+section { background:#fff; border-radius:12px; padding:40px 44px; margin-bottom:24px;
+  box-shadow:0 1px 4px rgba(16,35,58,0.10); }
+h1 { font-size:36px; margin:0 0 16px; letter-spacing:-0.5px; }
+h2 { font-size:27px; margin:0 0 18px; color:#0b3b6f; }
+h3 { font-size:21px; margin:0 0 12px; color:#0b3b6f; }
+p { font-size:17px; line-height:1.6; margin:0 0 12px; }
+li { font-size:17px; line-height:1.6; margin-bottom:8px; }
+ul, ol { margin:0 0 12px; padding-left:24px; }
+code { font-family:Consolas, monospace; font-size:15px; background:#eef2f7; padding:1px 5px; border-radius:3px; }
+.scroll { overflow-x:auto; }
+table { border-collapse:collapse; width:100%; margin:8px 0 12px; }
+th, td { border:1px solid #c8d4e2; padding:8px 11px; font-size:15px; text-align:left; vertical-align:top; }
+th { background:#0b3b6f; color:#fff; font-weight:600; }
+strong { color:#0b3b6f; }
+@media (max-width:600px) { section { padding:28px 20px; } h1 { font-size:28px; } h2 { font-size:22px; } }
+</style>
+<div class="wrap">
+<div class="bar"><a href="/">&larr; Mandate</a><span>&middot;</span><a href="/deck.pdf">Download PDF</a></div>
+${bodies.map(b => `<section>${b.split('<table>').join('<div class="scroll"><table>').split('</table>').join('</table></div>')}</section>`).join('\n')}
+</div>
+</html>`;
+
+const htmlCopy = path.join(pub, 'deck.html');
+fs.writeFileSync(htmlCopy, page);
+console.log('wrote', htmlCopy, fs.statSync(htmlCopy).size, 'bytes');

@@ -106,6 +106,19 @@ export function NavPill({ ctaLabel, ctaHref }: { ctaLabel: string; ctaHref: stri
       >
         Mandate
       </Link>
+      {/* Served as a static file from public/, so it must be a plain anchor:
+          next/link would try to client-route to a nonexistent page. */}
+      <a
+        href="/deck.pdf"
+        style={{
+          fontSize: 14,
+          fontWeight: 500,
+          color: C.headingDark,
+          textDecoration: "none",
+        }}
+      >
+        Deck
+      </a>
       <Link
         className="btn"
         href={ctaHref}
